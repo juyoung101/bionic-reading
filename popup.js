@@ -19,6 +19,7 @@ chrome.storage.sync.get("color", ({ color }) => {
   changeColor.style.backgroundColor = color;
 });
 
+//TODO: Make this just work when the page loads, no buttons to click or anything. Make this button enable/disable the conversion.
 // When the button is clicked, inject setPageBackgroundColor into current page
 changeColor.addEventListener("click", async () => {
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -62,42 +63,67 @@ function setPageBackgroundColor() {
     }
 	*/
 	
-	//process spans first since this method adds more span elements
-    let spanElements = document.getElementsByTagName("span");
-	pElements.forEach(function(textElement) {
-		asynchronousProcess(function(textElement) {
-			for (var j = 0; j < textElement.childNodes.length; j++) {
-				var node = textElement.childNodes[j];
-				if (node.nodeType === 3) {
-					var text = node.nodeValue;
-					var txt = document.createElement("span");
-					//TODO handle words, temporarily it is using the whole text
-					const length = text.length;
-					const midPoint = Math.round(length / 2);
-					const firstHalf = text.slice(0, midPoint);
-					const secondHalf = text.slice(midPoint);
-					const htmlWord = `${firstHalf}${secondHalf}`;
-					txt.innerHTML = htmlWord;
-					node.replaceWith(txt);
-					
-					//alternate node replace method
-					//var replacedText = "text;
-					//if (replacedText !== text) {
-					//	textElement.replaceChild(document.createTextNode(replacedText), node);
-					//}
-				}
-			}
-		});
-	});	
 	
-	// then we can process other tag types
-    let pElements = document.getElementsByTagName("p");
-	spanElements.forEach(function(item, i) {
-		asynchronousProcess(function(item) {
-			console.log(i);
-		});
+	//process spans first since this method adds more span elements
+	let spanElements = document.getElementsByTagName("span");
+	Array.from(spanElements).forEach(async (textElement) => {
+		// each element takes a different amount of time to complete
+		for (var j = 0; j < textElement.childNodes.length; j++) {
+			var node = textElement.childNodes[j];
+			if (node.nodeType === 3) {
+				var text = node.nodeValue;
+				var newTextElement = document.createElement("span");
+				var words = text.split(" ");
+				const bionicWords = words.map((word) => {
+					const length = word.length;
+					if(length <= 2) {
+						if(word!=="I"){
+							return word;
+						}
+					}
+					var midPoint = Math.round(length / 2) - 1;
+					if(midPoint == 1){ midPoint=2; }
+					const firstHalf = word.slice(0, midPoint);
+					const secondHalf = word.slice(midPoint);
+					const htmlWord = `<b>${firstHalf}</b>${secondHalf}`;
+					return htmlWord;
+				  });
+				newTextElement.innerHTML = bionicWords.join(" ");
+				node.replaceWith(newTextElement);
+			}
+		}
+		//console.log(textElement);
 	});
-
-    // document.body.style.backgroundColor = color;
+	
+	
+	let pElements = document.getElementsByTagName("p");
+	Array.from(pElements).forEach(async (textElement) => {
+		// each element takes a different amount of time to complete
+		for (var j = 0; j < textElement.childNodes.length; j++) {
+			var node = textElement.childNodes[j];
+			if (node.nodeType === 3) {
+				var text = node.nodeValue;
+				var newTextElement = document.createElement("span");
+				var words = text.split(" ");
+				const bionicWords = words.map((word) => {
+					const length = word.length;
+					if(length <= 2) {
+						if(word!=="I"){
+							return word;
+						}
+					}
+					var midPoint = Math.round(length / 2) - 1;
+					if(midPoint == 1){ midPoint=2; }
+					const firstHalf = word.slice(0, midPoint);
+					const secondHalf = word.slice(midPoint);
+					const htmlWord = `<b>${firstHalf}</b>${secondHalf}`;
+					return htmlWord;
+				  });
+				newTextElement.innerHTML = bionicWords.join(" ");
+				node.replaceWith(newTextElement);
+			}
+		}
+		//console.log(textElement);
+	});
   });
 }
